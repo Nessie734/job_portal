@@ -1,0 +1,141 @@
+{% extends 'common/base.html' %}
+
+{% block title %}Job Seeker Dashboard{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="h3">Welcome back, {{ user.username }}!</h1>
+        <p class="text-muted">Here's your job search overview</p>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-5">
+    <div class="col-md-4 mb-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ recent_applications.count }}</h4>
+                        <p class="card-text">Applications Sent</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-paper-plane fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ saved_jobs_count }}</h4>
+                        <p class="card-text">Saved Jobs</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-bookmark fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">0</h4>
+                        <p class="card-text">Interviews</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-calendar-check fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent Applications -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Recent Applications</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_applications %}
+                    {% for application in recent_applications %}
+                    <div class="border-bottom pb-3 mb-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">{{ application.job.title }}</h6>
+                                <p class="text-muted mb-1">{{ application.job.company.name }}</p>
+                                <small class="text-muted">Applied {{ application.applied_date|timesince }} ago</small>
+                            </div>
+                            <span class="badge 
+                                {% if application.status == 'submitted' %}bg-secondary
+                                {% elif application.status == 'under_review' %}bg-primary
+                                {% elif application.status == 'shortlisted' %}bg-warning
+                                {% elif application.status == 'accepted' %}bg-success
+                                {% else %}bg-danger{% endif %}">
+                                {{ application.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    <div class="text-center mt-3">
+                        <a href="{% url 'my_applications' %}" class="btn btn-outline-primary">View All Applications</a>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <h5>No applications yet</h5>
+                        <p class="text-muted">Start applying to jobs to see your applications here.</p>
+                        <a href="{% url 'job_list' %}" class="btn btn-primary">Browse Jobs</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'job_list' %}" class="btn btn-primary">
+                        <i class="fas fa-search me-2"></i>Browse Jobs
+                    </a>
+                    <a href="{% url 'saved_jobs' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-bookmark me-2"></i>Saved Jobs
+                    </a>
+                    <a href="{% url 'profile' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-user me-2"></i>Update Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Completeness -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">Profile Strength</h5>
+            </div>
+            <div class="card-body">
+                <div class="progress mb-3" style="height: 10px;">
+                    <div class="progress-bar bg-success" style="width: 65%;"></div>
+                </div>
+                <p class="small text-muted mb-2">Complete your profile to increase your chances</p>
+                <a href="{% url 'profile' %}" class="btn btn-sm btn-outline-success w-100">Complete Profile</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

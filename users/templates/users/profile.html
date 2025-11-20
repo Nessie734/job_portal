@@ -1,0 +1,152 @@
+{% extends 'users/base.html' %}
+
+{% block title %}Profile - {{ user.username }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">Profile Settings</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <h5 class="mb-3">Account Information</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Username</label>
+                            {{ user_form.username }}
+                            {% if user_form.username.errors %}
+                                <div class="text-danger">{{ user_form.username.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email</label>
+                            {{ user_form.email }}
+                            {% if user_form.email.errors %}
+                                <div class="text-danger">{{ user_form.email.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Phone Number</label>
+                            {{ user_form.phone_number }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Profile Picture</label>
+                            {{ user_form.profile_picture }}
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+                    
+                    <h5 class="mb-3">
+                        {% if user.user_type == 'job_seeker' %}Job Seeker Profile{% else %}Employer Profile{% endif %}
+                    </h5>
+                    
+                    {% if user.user_type == 'job_seeker' %}
+                        <div class="mb-3">
+                            <label class="form-label">Resume</label>
+                            {{ profile_form.resume }}
+                            <div class="form-text">Upload your resume (PDF, DOC, DOCX)</div>
+                            {% if profile_form.resume.errors %}
+                                <div class="text-danger">{{ profile_form.resume.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Skills</label>
+                            {{ profile_form.skills }}
+                            <div class="form-text">List your skills separated by commas</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Experience</label>
+                            {{ profile_form.experience }}
+                            <div class="form-text">Describe your work experience</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Education</label>
+                            {{ profile_form.education }}
+                            <div class="form-text">List your educational background</div>
+                        </div>
+
+                    {% else %}
+                        <div class="mb-3">
+                            <label class="form-label">Company Name *</label>
+                            {{ profile_form.company_name }}
+                            {% if profile_form.company_name.errors %}
+                                <div class="text-danger">{{ profile_form.company_name.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Company Description</label>
+                            {{ profile_form.company_description }}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Company Website</label>
+                                {{ profile_form.company_website }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Company Logo</label>
+                                {{ profile_form.company_logo }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Company Size</label>
+                                {{ profile_form.company_size }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Industry</label>
+                                {{ profile_form.industry }}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">Update Profile</button>
+                        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Current Profile Info -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">Current Profile Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Username:</strong> {{ user.username }}</p>
+                        <p><strong>Email:</strong> {{ user.email }}</p>
+                        <p><strong>User Type:</strong> {{ user.get_user_type_display }}</p>
+                        <p><strong>Phone:</strong> {{ user.phone_number|default:"Not provided" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        {% if user.user_type == 'job_seeker' and user.jobseekerprofile.resume %}
+                            <p><strong>Resume:</strong> <a href="{{ user.jobseekerprofile.resume.url }}" target="_blank">View Resume</a></p>
+                        {% elif user.user_type == 'employer' %}
+                            <p><strong>Company:</strong> {{ user.employerprofile.company_name }}</p>
+                            {% if user.employerprofile.company_website %}
+                                <p><strong>Website:</strong> <a href="{{ user.employerprofile.company_website }}" target="_blank">{{ user.employerprofile.company_website }}</a></p>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

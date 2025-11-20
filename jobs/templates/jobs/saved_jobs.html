@@ -1,0 +1,53 @@
+{% extends 'jobs/base.html' %}
+
+{% block title %}Saved Jobs{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col">
+        <h1 class="h3 mb-4">Saved Jobs</h1>
+        
+        {% if saved_jobs %}
+            {% for saved_job in saved_jobs %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h5 class="card-title">
+                                <a href="{% url 'job_detail' saved_job.job.id %}" class="text-decoration-none">
+                                    {{ saved_job.job.title }}
+                                </a>
+                            </h5>
+                            <h6 class="card-subtitle mb-2 text-muted">{{ saved_job.job.company.name }}</h6>
+                            <p class="card-text">
+                                <small class="text-muted">
+                                    <i class="fas fa-map-marker-alt"></i> {{ saved_job.job.location }} • 
+                                    <i class="fas fa-briefcase"></i> {{ saved_job.job.get_job_type_display }} •
+                                    <i class="fas fa-chart-line"></i> {{ saved_job.job.get_experience_level_display }}
+                                    {% if saved_job.job.salary %} • <i class="fas fa-money-bill-wave"></i> ${{ saved_job.job.salary }}{% endif %}
+                                </small>
+                            </p>
+                            <p class="card-text">{{ saved_job.job.description|truncatewords:30 }}</p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <small class="text-muted d-block">Saved {{ saved_job.saved_date|timesince }} ago</small>
+                            <div class="mt-2">
+                                <a href="{% url 'job_detail' saved_job.job.id %}" class="btn btn-primary btn-sm">View Details</a>
+                                <a href="{% url 'unsave_job' saved_job.job.id %}" class="btn btn-outline-danger btn-sm">Remove</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-bookmark fa-4x text-muted mb-3"></i>
+                <h3>No saved jobs</h3>
+                <p class="text-muted mb-4">Save jobs you're interested in to apply later.</p>
+                <a href="{% url 'job_list' %}" class="btn btn-primary btn-lg">Browse Jobs</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

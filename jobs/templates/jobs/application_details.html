@@ -1,0 +1,158 @@
+{% extends 'jobs/base.html' %}
+
+{% block title %}Application Details{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-1">Application Details</h1>
+                <p class="text-muted mb-0">{{ application.job.title }}</p>
+            </div>
+            <a href="{% url 'view_applicants' application.job.id %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Applicants
+            </a>
+        </div>
+
+        <div class="row">
+            <!-- Applicant Information -->
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Applicant Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Name:</strong> {{ application.applicant.get_full_name|default:application.applicant.username }}</p>
+                                <p><strong>Email:</strong> {{ application.applicant.email }}</p>
+                                <p><strong>Phone:</strong> {{ application.applicant.phone_number|default:"Not provided" }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Applied:</strong> {{ application.applied_date|date:"M d, Y H:i" }}</p>
+                                <p><strong>Last Updated:</strong> {{ application.last_status_update|date:"M d, Y H:i" }}</p>
+                                {% if application.applicant.jobseekerprofile.resume %}
+                                <p>
+                                    <a href="{{ application.applicant.jobseekerprofile.resume.url }}" 
+                                       target="_blank" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-download me-1"></i>Download Resume
+                                    </a>
+                                </p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        {% if application.applicant.jobseekerprofile.skills %}
+                        <div class="mt-3">
+                            <h6>Skills</h6>
+                            <p class="text-muted">{{ application.applicant.jobseekerprofile.skills }}</p>
+                        </div>
+                        {% endif %}
+
+                        {% if application.applicant.jobseekerprofile.experience %}
+                        <div class="mt-3">
+                            <h6>Experience</h6>
+                            <p class="text-muted">{{ application.applicant.jobseekerprofile.experience|linebreaks }}</p>
+                        </div>
+                        {% endif %}
+
+                        {% if application.applicant.jobseekerprofile.education %}
+                        <div class="mt-3">
+                            <h6>Education</h6>
+                            <p class="text-muted">{{ application.applicant.jobseekerprofile.education|linebreaks }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Cover Letter -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Cover Letter</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>{{ application.cover_letter|linebreaks }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Management -->
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Application Status</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-3">
+                            <span class="badge 
+                                {% if application.status == 'submitted' %}bg-secondary
+                                {% elif application.status == 'under_review' %}bg-primary
+                                {% elif application.status == 'shortlisted' %}bg-warning
+                                {% elif application.status == 'accepted' %}bg-success
+                                {% elif application.status == 'interview_scheduled' %}bg-info
+                                {% else %}bg-danger{% endif %} fs-6 px-3 py-2">
+                                {{ application.get_status_display }}
+                            </span>
+                        </div>
+
+                        <form method="post" action="{% url 'update_application_status' application.id %}">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label class="form-label">Update Status</label>
+                                <select name="status" class="form-select" required>
+                                    {% for status_value, status_name in application_status_choices %}
+                                    <option value="{{ status_value }}" {% if application.status == status_value %}selected{% endif %}>
+                                        {{ status_name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Internal Notes</label>
+                                <textarea name="employer_notes" class="form-control" rows="3" 
+                                          placeholder="Add internal notes about this applicant...">{{ application.employer_notes }}</textarea>
+                            </div>
+
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" name="notify_applicant" id="notifyApplicant" checked>
+                                <label class="form-check-label" for="notifyApplicant">
+                                    Notify applicant via email
+                                </label>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-save me-2"></i>Update Status
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            {% for status_value, status_name in application_status_choices %}
+                            {% if status_value != application.status %}
+                            <form method="post" action="{% url 'update_application_status' application.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="{{ status_value }}">
+                                <input type="hidden" name="notify_applicant" value="on">
+                                <button type="submit" class="btn btn-outline-primary btn-sm w-100 text-start">
+                                    <i class="fas fa-arrow-right me-2"></i>Mark as {{ status_name }}
+                                </button>
+                            </form>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

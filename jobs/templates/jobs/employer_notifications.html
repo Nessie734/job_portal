@@ -1,0 +1,194 @@
+{% extends 'jobs/base.html' %}
+
+{% block title %}Notifications{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0">Notifications</h1>
+            {% if unread_count > 0 %}
+            <form method="get" class="d-inline">
+                <input type="hidden" name="mark_read" value="all">
+                <button type="submit" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-check-double me-2"></i>Mark All as Read
+                </button>
+
+            </form>
+            {% endif %}
+        </div>
+
+        <!-- Notifications Stats -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body text-center">
+                        <h3>{{ notifications.count }}</h3>
+                        <p class="mb-0">Total Notifications</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body text-center">
+                        <h3>{{ unread_count }}</h3>
+                        <p class="mb-0">Unread</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body text-center">
+                        <h3>{{ application_updates_count }}</h3>
+                        <p class="mb-0">Application Updates</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body text-center">
+                        <h3>{{ system_count }}</h3>
+                        <p class="mb-0">System</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notifications List -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">All Notifications</h5>
+            </div>
+            <div class="card-body">
+                {% if notifications %}
+                    {% for notification in notifications %}
+                    <div class="border-bottom pb-3 mb-3 {% if not notification.is_read %}bg-light rounded p-3{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center mb-2">
+                                    {% if not notification.is_read %}
+                                    <span class="badge bg-warning me-2">New</span>
+                                    {% endif %}
+                                    
+                                    <span class="badge 
+                                        {% if notification.notification_type == 'application_status' %}bg-primary
+                                        {% elif notification.notification_type == 'interview' %}bg-success
+                                        {% elif notification.notification_type == 'message' %}bg-info
+                                        {% else %}bg-secondary{% endif %} me-2">
+                                        {{ notification.get_notification_type_display }}
+                                    </span>
+                                    
+                                    <small class="text-muted">
+                                        <i class="fas fa-clock me-1"></i>{{ notification.created_at|timesince }} ago
+                                    </small>
+                                </div>
+                                
+                                <h6 class="mb-1 {% if not notification.is_read %}fw-bold{% endif %}">
+                                    {{ notification.title }}
+                                </h6>
+                                
+                                <p class="mb-2 text-muted">{{ notification.message }}</p>
+                                
+                                {% if notification.related_application %}
+                                <div class="mt-2">
+                                    <small class="text-muted">
+                                        Related to: 
+                                        <a href="{% url 'application_detail' notification.related_application.id %}" 
+                                           class="text-decoration-none">
+                                            {{ notification.related_application.job.title }}
+                                        </a>
+                                        • 
+                                        <span class="badge 
+                                            {% if notification.related_application.status == 'submitted' %}bg-secondary
+                                            {% elif notification.related_application.status == 'under_review' %}bg-primary
+                                            {% elif notification.related_application.status == 'shortlisted' %}bg-warning
+                                            {% elif notification.related_application.status == 'accepted' %}bg-success
+                                            {% elif notification.related_application.status == 'interview_scheduled' %}bg-info
+                                            {% else %}bg-danger{% endif %}">
+                                            {{ notification.related_application.get_status_display }}
+                                        </span>
+                                    </small>
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="flex-shrink-0 ms-3">
+                                {% if not notification.is_read %}
+                                <a href="{% url 'mark_notification_read' notification.id %}" 
+                                   class="btn btn-sm btn-outline-success"
+                                   title="Mark as read">
+                                    <i class="fas fa-check"></i>
+                                </a>
+                                {% else %}
+                                <span class="text-success" title="Read">
+                                    <i class="fas fa-check-circle"></i>
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-bell-slash fa-4x text-muted mb-3"></i>
+                        <h4>No Notifications</h4>
+                        <p class="text-muted">You're all caught up! New notifications will appear here.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Notification Types Info -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">Notification Types</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-primary me-3">Application Status</span>
+                            <small class="text-muted">Updates on applicant status changes</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-success me-3">Interview</span>
+                            <small class="text-muted">Interview scheduling and updates</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-info me-3">Message</span>
+                            <small class="text-muted">Direct messages from applicants</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-secondary me-3">System</span>
+                            <small class="text-muted">System updates and announcements</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<style>
+.card {
+    transition: transform 0.2s;
+}
+.card:hover {
+    transform: translateY(-2px);
+}
+.badge {
+    font-size: 0.7em;
+}
+.bg-light {
+    background-color: #f8f9fa !important;
+    border-left: 4px solid #007bff;
+}
+</style>
+{% endblock %}

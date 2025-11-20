@@ -1,0 +1,176 @@
+{% extends 'jobs/base.html' %}
+
+{% block title %}Applicants for {{ job.title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-1">Applicants for</h1>
+                <h2 class="h4 text-primary">{{ job.title }}</h2>
+                <p class="text-muted mb-0">{{ job.company.name }} • {{ applications.count }} applicants</p>
+            </div>
+            <a href="{% url 'employer_dashboard' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+
+        <!-- Add this near the top with other action buttons -->
+<div class="d-flex gap-2 mb-3">
+    <a href="{% url 'employer_notifications' %}" class="btn btn-outline-warning">
+        <i class="fas fa-bell me-2"></i>Notifications
+        {% if unread_count > 0 %}
+        <span class="badge bg-danger">{{ unread_count }}</span>
+        {% endif %}
+    </a>
+</div>
+
+        <!-- Filters and Search -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <form method="get" class="d-flex">
+                            <input type="text" name="search" class="form-control me-2" 
+                                   placeholder="Search applicants..." value="{{ search_query }}">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </form>
+                    </div>
+                    <div class="col-md-6">
+                        <form method="get" class="d-flex">
+                            <select name="status" class="form-select me-2" onchange="this.form.submit()">
+                                <option value="">All Statuses</option>
+                                {% for status_value, status_name in application_status_choices %}
+                                <option value="{{ status_value }}" {% if status_filter == status_value %}selected{% endif %}>
+                                    {{ status_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% if search_query %}
+                                <input type="hidden" name="search" value="{{ search_query }}">
+                            {% endif %}
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Applicants List -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Applicants ({{ applications.count }})</h5>
+            </div>
+            <div class="card-body">
+                {% if applications %}
+                    {% for application in applications %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <h5 class="card-title">
+                                        {{ application.applicant.get_full_name|default:application.applicant.username }}
+                                    </h5>
+                                    <p class="card-text mb-1">
+                                        <strong>Email:</strong> {{ application.applicant.email }}
+                                        {% if application.applicant.phone_number %}
+                                            • <strong>Phone:</strong> {{ application.applicant.phone_number }}
+                                        {% endif %}
+                                    </p>
+                                    <p class="card-text mb-1">
+                                        <strong>Applied:</strong> {{ application.applied_date|timesince }} ago
+                                    </p>
+                                    {% if application.cover_letter %}
+                                    <p class="card-text">
+                                        <strong>Cover Letter:</strong> 
+                                        {{ application.cover_letter|truncatewords:30 }}
+                                    </p>
+                                    {% endif %}
+                                    {% if application.applicant.jobseekerprofile.resume %}
+                                    <p class="card-text">
+                                        <a href="{{ application.applicant.jobseekerprofile.resume.url }}" 
+                                           target="_blank" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-download me-1"></i>Download Resume
+                                        </a>
+                                    </p>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <!-- Status Badge -->
+                                    <span class="badge 
+                                        {% if application.status == 'submitted' %}bg-secondary
+                                        {% elif application.status == 'under_review' %}bg-primary
+                                        {% elif application.status == 'shortlisted' %}bg-warning
+                                        {% elif application.status == 'accepted' %}bg-success
+                                        {% elif application.status == 'interview_scheduled' %}bg-info
+                                        {% else %}bg-danger{% endif %} mb-2 fs-6">
+                                        {{ application.get_status_display }}
+                                    </span>
+                                    
+                                    <!-- Action Buttons -->
+                                    <div class="btn-group-vertical w-100">
+                                        <a href="{% url 'application_detail' application.id %}" 
+                                           class="btn btn-sm btn-outline-primary mb-2">
+                                            <i class="fas fa-eye me-1"></i>View Details
+                                        </a>
+                                        
+                                        <!-- Quick Status Update -->
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-outline-success dropdown-toggle w-100" 
+                                                    type="button" data-bs-toggle="dropdown">
+                                                <i class="fas fa-edit me-1"></i>Update Status
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                {% for status_value, status_name in application_status_choices %}
+                                                <li>
+                                                    <form method="post" action="{% url 'update_application_status' application.id %}" 
+                                                          class="d-inline">
+                                                        {% csrf_token %}
+                                                        <input type="hidden" name="status" value="{{ status_value }}">
+                                                        <input type="hidden" name="notify_applicant" value="on">
+                                                        <button type="submit" class="dropdown-item">
+                                                            Mark as {{ status_name }}
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-users fa-4x text-muted mb-3"></i>
+                        <h4>No Applicants Found</h4>
+                        <p class="text-muted">
+                            {% if search_query or status_filter %}
+                                No applicants match your search criteria.
+                            {% else %}
+                                No one has applied for this job yet.
+                            {% endif %}
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    transition: transform 0.2s;
+}
+.card:hover {
+    transform: translateY(-2px);
+}
+.badge {
+    font-size: 0.8em;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends 'jobs/base.html' %}
+
+{% block title %}{{ job.title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h1 class="card-title">{{ job.title }}</h1>
+                <h4 class="card-subtitle mb-3 text-muted">{{ job.company.name }}</h4>
+                
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <p><strong><i class="fas fa-map-marker-alt"></i> Location:</strong> {{ job.location }}</p>
+                        <p><strong><i class="fas fa-briefcase"></i> Job Type:</strong> {{ job.get_job_type_display }}</p>
+                        <p><strong><i class="fas fa-chart-line"></i> Experience:</strong> {{ job.get_experience_level_display }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        {% if job.salary %}
+                            <p><strong><i class="fas fa-money-bill-wave"></i> Salary:</strong> ${{ job.salary }}</p>
+                        {% endif %}
+                        <p><strong><i class="fas fa-calendar"></i> Posted:</strong> {{ job.created_at|date:"M d, Y" }}</p>
+                        <p><strong><i class="fas fa-clock"></i> Deadline:</strong> {{ job.application_deadline|date:"M d, Y" }}</p>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h5>Job Description</h5>
+                    <p>{{ job.description|linebreaks }}</p>
+                </div>
+
+                <div class="mb-4">
+                    <h5>Requirements</h5>
+                    <p>{{ job.requirements|linebreaks }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Application Actions</h5>
+                
+                {% if user.is_authenticated %}
+                    {% if user.user_type == 'job_seeker' %}
+                        {% if has_applied %}
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle"></i> You have applied for this position
+                            </div>
+                        {% elif job.is_expired %}
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle"></i> Application deadline has passed
+                            </div>
+                        {% else %}
+                            <a href="{% url 'apply_job' job.id %}" class="btn btn-success btn-lg w-100 mb-2">
+                                <i class="fas fa-paper-plane"></i> Apply Now
+                            </a>
+                        {% endif %}
+
+                        {% if is_saved %}
+                            <a href="{% url 'unsave_job' job.id %}" class="btn btn-outline-danger w-100">
+                                <i class="fas fa-bookmark"></i> Remove from Saved
+                            </a>
+                        {% else %}
+                            <a href="{% url 'save_job' job.id %}" class="btn btn-outline-primary w-100">
+                                <i class="far fa-bookmark"></i> Save Job
+                            </a>
+                        {% endif %}
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> Employers cannot apply for jobs
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> Please 
+                        <a href="{% url 'login' %}">login</a> as a job seeker to apply for this job.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-body">
+                <h5 class="card-title">Company Information</h5>
+                {% if job.company.logo %}
+                    <img src="{{ job.company.logo.url }}" alt="{{ job.company.name }} logo" class="img-fluid mb-3" style="max-height: 80px;">
+                {% endif %}
+                <p><strong>About:</strong> {{ job.company.description|truncatewords:30 }}</p>
+                {% if job.company.website %}
+                    <p><strong>Website:</strong> <a href="{{ job.company.website }}" target="_blank">{{ job.company.website }}</a></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
